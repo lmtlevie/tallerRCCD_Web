@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cliente WebSocket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        #messages {
+            border: 1px solid #ccc;
+            height: 300px;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .sent {
+            color: blue;
+        }
+        .received {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        input {
+            width: 70%;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 20px;
+        }
+        .status {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cliente WebSocket</h1>
+    
+    <div id="status" class="status disconnected">Desconectado</div>
+    
+    <div id="messages"></div>
+    
+    <input type="text" id="messageInput" placeholder="Escribe un mensaje...">
+    <button onclick="sendMessage()">Enviar</button>
+    
+    <script>
+        let ws = null;
+        const messagesDiv = document.getElementById('messages');
+        const statusDiv = document.getElementById('status');
+        const messageInput = document.getElementById('messageInput');
+        
+        function connect() {
+            ws = new WebSocket('ws://localhost:8080');
+            
+            ws.onopen = function() {
+                addMessage('Conectado al servidor', 'received');
+                statusDiv.textContent = 'Conectado';
+                statusDiv.className = 'status connected';
+            };
+            
+            ws.onmessage = function(event) {
+                addMessage('Servidor: ' + event.data, 'received');
+            };
+            
+            ws.onerror = function(error) {
+                addMessage('Error: ' + error, 'error');
+            };
+            
+            ws.onclose = function() {
+                addMessage('Desconectado', 'error');
+                statusDiv.textContent = 'Desconectado';
+                statusDiv.className = 'status disconnected';
+            };
+        }
+        
+        function sendMessage() {
+            const message = messageInput.value;
+            if (message && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(message);
+                addMessage('Tu: ' + message, 'sent');
+                messageInput.value = '';
+            }
+        }
+        
+        function addMessage(text, className) {
+            const div = document.createElement('div');
+            div.className = 'message ' + className;
+            div.textContent = text;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        connect();
+    </script>
+</body>
+</html>
+

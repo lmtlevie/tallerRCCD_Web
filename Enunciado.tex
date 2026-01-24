@@ -1,0 +1,232 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\geometry{margin=2.5cm}
+
+% Configuración de colores
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Estilo de código
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+% Configuración de títulos
+\titleformat{\section}
+  {\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+% Encabezado y pie de página
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Redes de Comunicaciones y Cómputo Distribuido}
+\rhead{1er Cuatrimestre 2026}
+\cfoot{\thepage}
+
+\begin{document}
+
+\begin{center}
+    {\Large \textbf{Redes de Comunicaciones y Cómputo Distribuido}}\\[0.3cm]
+    {\large 1er Cuatrimestre 2026}\\[1cm]
+    
+    {\Huge \textbf{Taller - Protocolos HTTP y WebSocket}}\\[0.5cm]
+    
+    \textbf{LEER EL ENUNCIADO COMPLETO ANTES DE ARRANCAR.}\\[0.5cm]
+    
+\end{center}
+
+\section*{Objetivo}
+
+Este taller tiene como objetivo comprender cómo funcionan los protocolos de nivel de aplicación. Se enfoca en entender la construcción de requests y responses, el intercambio de información entre cliente y servidor y la diferencia entre protocolos stateless (HTTP) y stateful (WebSocket).
+
+\section*{Metodología de Trabajo}
+
+Para completar cada ejercicio o subconsigna, el alumno debe: primero crear un archivo con el request HTTP/WebSocket dentro de la carpeta \texttt{requests/}, luego implementar el código correspondiente en los archivos indicados, y finalmente ejecutar el request con netcat para validar que la implementación funciona correctamente. Sin crear el archivo de request y ejecutarlo con netcat, el ejercicio no se considera completo.
+
+\section*{Herramientas}
+
+Netcat (comando \texttt{nc}) es una herramienta que permite enviar datos raw por TCP. Se utiliza para enviar requests HTTP manualmente y observar las respuestas. La sintaxis básica es:
+
+\begin{lstlisting}[language=bash]
+cat archivo.http | nc localhost 8080
+\end{lstlisting}
+
+Este comando lee el archivo y lo envía byte por byte al servidor en localhost puerto 8080, mostrando la respuesta exacta que el servidor devuelve.
+
+\section{Ejercicio 1: Protocolo HTTP}
+
+\subsection{Ejercicio 1.1}
+
+Completar la función \texttt{parse\_request\_line()} en el archivo \texttt{http\_parser.py}. Esta función debe separar la primera línea de un HTTP request en sus tres componentes: método, path y versión del protocolo. La función recibe como entrada un string como \texttt{"GET /index.html HTTP/1.1"} y debe retornar un diccionario con las keys \texttt{"method"}, \texttt{"path"} y \texttt{"version"}.
+
+Para completar este ejercicio, crear un archivo \texttt{requests/01\_parse\_test.http} con un request HTTP simple y ejecutarlo con netcat para verificar que el parser funciona correctamente.
+
+\subsection{Ejercicio 1.2}
+
+Completar la función \texttt{build\_response()} en el archivo \texttt{http\_parser.py}. Esta función formatea respuestas HTTP correctamente según el estándar. Recibe como parámetros el código de estado (200, 404, etc.), el contenido de la respuesta en bytes, y el tipo MIME del contenido. Debe construir un response HTTP con el siguiente formato:
+
+\begin{lstlisting}
+HTTP/1.1 CODIGO MENSAJE\r\n
+Content-Type: tipo\r\n
+Content-Length: tamanio\r\n
+\r\n
+body
+\end{lstlisting}
+
+Utilizar el diccionario \texttt{STATUS\_MESSAGES} para obtener el mensaje correspondiente al código de estado.
+
+
+\subsection{Ejercicio 1.3}
+
+Para completar este ejercicio, primero crear el archivo \texttt{requests/01\_get.http} que solicite el recurso \texttt{/index.html}. Un GET request tiene la siguiente estructura:
+
+\begin{lstlisting}
+METODO PATH VERSION
+Host: valor
+[linea vacia]
+\end{lstlisting}
+
+Luego, en el archivo \texttt{http\_server.py}, completar las funciones \texttt{handle\_client()} y \texttt{handle\_get()} para manejar requests GET. Es necesario implementar ruteo según el método del request.
+
+Finalmente, para validar que el ejercicio está completo, levantar el servidor con \texttt{python http\_server.py} y en otra terminal ejecutar el request creado:
+
+\begin{lstlisting}[language=bash]
+cat requests/01_get.http | nc localhost 8080
+\end{lstlisting}
+
+\subsection{Ejercicio 1.4}
+
+Para completar este ejercicio, primero crear el archivo \texttt{requests/02\_get\_json.http} que solicite el recurso \texttt{/users.json}. Luego, en el archivo \texttt{http\_server.py}, completar la función \texttt{get\_content\_type()} para determinar el Content-Type según la extensión del archivo. Modificar la función \texttt{handle\_get()} para servir archivos del filesystem desde la carpeta \texttt{resources/}, retornando código 200 si el archivo existe y 404 si no existe.
+
+Para validar que el ejercicio está completo, ejecutar el request creado con netcat:
+
+\begin{lstlisting}[language=bash]
+cat requests/02_get_json.http | nc localhost 8080
+\end{lstlisting}
+
+\subsection{Ejercicio 1.5}
+
+Completar la función \texttt{parse\_request()} en el archivo \texttt{http\_parser.py}. Esta función debe parsear un request HTTP completo incluyendo el body. La línea vacía separa los headers del body. La función debe retornar un diccionario con las keys \texttt{method}, \texttt{path}, \texttt{version}, y \texttt{body}.
+
+Para completar este ejercicio, crear un archivo \texttt{requests/02\_parse\_complete.http} con un request que incluya headers y body, y ejecutarlo con netcat para verificar que el parser funciona correctamente.
+
+\subsection{Ejercicio 1.6}
+
+Para completar este ejercicio, primero crear el archivo \texttt{requests/03\_post.http} con el siguiente contenido:
+
+\begin{lstlisting}
+POST /users HTTP/1.1
+Host: localhost:8080
+Content-Length: [calcular bytes exactos]
+
+{"name": "Charlie"}
+\end{lstlisting}
+
+El header \texttt{Content-Length} debe contener el número exacto de bytes del body. Luego, en el archivo \texttt{http\_server.py}, completar la función \texttt{handle\_post()} para procesar requests POST y retornar código 201. Actualizar el ruteo para manejar el método POST.
+
+Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
+
+\begin{lstlisting}[language=bash]
+cat requests/03_post.http | nc localhost 8080
+\end{lstlisting}
+
+\subsection{Ejercicio 1.7}
+
+Para completar este ejercicio, primero crear el archivo \texttt{requests/04\_head.http} igual a un GET request pero utilizando el método HEAD. Luego, en el archivo \texttt{http\_server.py}, completar la función \texttt{handle\_head()} para manejar requests HEAD, retornando solo headers sin body. Actualizar el ruteo para manejar el método HEAD.
+
+Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
+
+\begin{lstlisting}[language=bash]
+cat requests/04_head.http | nc localhost 8080
+\end{lstlisting}
+
+Se observarán los headers de la respuesta pero no el contenido del recurso.
+
+\subsection{Ejercicio 1.8}
+
+Para completar este ejercicio, primero crear el archivo \texttt{requests/05\_headers.http} con múltiples headers como Host, User-Agent, Accept y Connection. Luego, en el archivo \texttt{http\_parser.py}, completar la función \texttt{parse\_headers()} y modificar \texttt{parse\_request()} para incluir los headers en el diccionario retornado.
+
+Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
+
+\begin{lstlisting}[language=bash]
+cat requests/05_headers.http | nc localhost 8080
+\end{lstlisting}
+
+\subsection{Ejercicio 1.9}
+
+Para completar este ejercicio, primero crear el archivo \texttt{requests/06\_not\_found.http} solicitando un recurso inexistente como \texttt{/noexiste.html}. La implementación del Ejercicio 1.4 ya debe manejar correctamente el error 404.
+
+Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
+
+\begin{lstlisting}[language=bash]
+cat requests/06_not_found.http | nc localhost 8080
+\end{lstlisting}
+
+\section{Ejercicio 2: Protocolo WebSocket}
+
+\subsection{Ejercicio 2.1}
+
+Para completar este ejercicio, primero crear el archivo \texttt{requests/handshake.http} con un HTTP request de upgrade WebSocket. El protocolo WebSocket comienza como un HTTP request normal con headers especiales: \texttt{Upgrade: websocket}, \texttt{Connection: Upgrade}, \texttt{Sec-WebSocket-Key} (valor aleatorio en Base64), y \texttt{Sec-WebSocket-Version: 13}. El servidor debe responder calculando el valor \texttt{Sec-WebSocket-Accept} según el algoritmo del RFC 6455.
+
+En el archivo \texttt{websocket\_frame.py}, completar la función \texttt{calculate\_accept\_key()} según el algoritmo del RFC 6455: concatenar el \texttt{Sec-WebSocket-Key} con el string mágico \texttt{"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"}, calcular SHA-1, y encodear en Base64.
+
+En el archivo \texttt{websocket\_server.py}, completar la función \texttt{handle\_handshake()} para procesar el request de upgrade y responder con código 101. El response debe tener el siguiente formato:
+
+\begin{lstlisting}
+HTTP/1.1 101 Switching Protocols\r\n
+Upgrade: websocket\r\n
+Connection: Upgrade\r\n
+Sec-WebSocket-Accept: [accept key calculado]\r\n
+\r\n
+\end{lstlisting}
+
+Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
+
+\begin{lstlisting}[language=bash]
+cat requests/handshake.http | nc localhost 8080
+\end{lstlisting}
+
+\subsection{Ejercicio 2.2}
+
+A diferencia de HTTP que utiliza texto plano, WebSocket empaqueta mensajes en frames binarios. La estructura de un frame es: Byte 0 contiene FIN (bit 7) y Opcode (bits 0-3), Byte 1 contiene MASK (bit 7) y Length (bits 0-6), los bytes 2-5 contienen la Masking key si MASK=1, y el resto contiene el Payload. Los opcodes importantes son \texttt{0x1} para mensaje de texto, \texttt{0x8} para cerrar conexión, \texttt{0x9} para ping, y \texttt{0xA} para pong.
+
+En el archivo \texttt{websocket\_frame.py}, completar las funciones \texttt{unmask\_payload()}, \texttt{parse\_frame()} y \texttt{build\_frame()} para manejar frames WebSocket. Recordar que el cliente enmascara los frames pero el servidor no.
+
+Para completar este ejercicio, probar la implementación usando el cliente WebSocket proporcionado en \texttt{client.html} o creando requests manuales con frames binarios.
+
+\subsection{Ejercicio 2.3}
+
+Para completar este ejercicio, primero asegurarse de que el handshake funciona correctamente ejecutando el request creado en el Ejercicio 2.1. Luego, en el archivo \texttt{websocket\_server.py}, completar las funciones \texttt{handle\_messages()} y \texttt{handle\_client()} para implementar un echo server que reciba mensajes y los devuelva al cliente.
+
+Finalmente, para validar que el ejercicio está completo, iniciar el servidor con \texttt{python websocket\_server.py}, abrir \texttt{client.html} en el navegador, escribir y enviar mensajes, y verificar que el servidor hace eco de los mensajes. El archivo \texttt{client.html} proporciona un cliente WebSocket JavaScript completo.
+
+
+\end{document}
