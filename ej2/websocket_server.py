@@ -1,12 +1,19 @@
 import socket
 import threading
 import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'ej1'))
-
+sys.path.append('../ej1')
 from http_parser import parse_request
 from websocket_frame import calculate_accept_key, parse_frame, build_frame
+
+
+def handle_handshake(client_socket):
+    # Completar
+    pass
+
+
+def handle_messages(client_socket):
+    # Completar
+    pass
 
 
 class WebSocketServer:
@@ -16,7 +23,7 @@ class WebSocketServer:
         self.socket = None
     
     def start(self):
-        print(f"Servidor WebSocket en ws://{self.host}:{self.port}")
+        print(f"Servidor WebSocket en {self.host}:{self.port}")
         
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -30,20 +37,12 @@ class WebSocketServer:
     
     def handle_client(self, client_socket, address):
         try:
-            # Completar: hacer handshake y manejar mensajes
-            pass
+            if handle_handshake(client_socket):
+                handle_messages(client_socket)
         except Exception as e:
             print(f"Error: {e}")
         finally:
             client_socket.close()
-    
-    def handle_handshake(self, client_socket) -> bool:
-        # Completar
-        pass
-    
-    def handle_messages(self, client_socket):
-        # Completar
-        pass
 
 
 if __name__ == "__main__":

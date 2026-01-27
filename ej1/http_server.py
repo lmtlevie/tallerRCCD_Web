@@ -3,19 +3,11 @@ import threading
 from http_parser import parse_request_line, parse_request, build_response
 
 
-def get_content_type(path: str) -> str:
-    pass
-
-
 def handle_get(request: dict) -> bytes:
     pass
 
 
 def handle_post(request: dict) -> bytes:
-    pass
-
-
-def handle_head(request: dict) -> bytes:
     pass
 
 

@@ -7,6 +7,7 @@
 \usepackage{hyperref}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
+\usepackage{graphicx}
 
 \geometry{margin=2.5cm}
 
@@ -69,7 +70,7 @@ Este taller tiene como objetivo comprender cómo funcionan los protocolos de niv
 
 \section*{Metodología de Trabajo}
 
-Para completar cada ejercicio o subconsigna, el alumno debe: primero crear un archivo con el request HTTP/WebSocket dentro de la carpeta \texttt{requests/}, luego implementar el código correspondiente en los archivos indicados, y finalmente ejecutar el request con netcat para validar que la implementación funciona correctamente. Sin crear el archivo de request y ejecutarlo con netcat, el ejercicio no se considera completo.
+Para completar cada ejercicio o subconsigna, el alumno debe:  crear un archivo con el request HTTP/WebSocket dentro de la carpeta \texttt{requests/}, luego implementar el código correspondiente en los archivos indicados, y finalmente ejecutar el request con netcat para validar que la implementación funciona correctamente. Tener en cuenta que se debe modificar la funcion principal  \texttt{handle\_client()} del server y correrlo de vuelta en otra terminal previamente a testearlo con netcat.
 
 \section*{Herramientas}
 
@@ -82,6 +83,8 @@ cat archivo.http | nc localhost 8080
 Este comando lee el archivo y lo envía byte por byte al servidor en localhost puerto 8080, mostrando la respuesta exacta que el servidor devuelve.
 
 \section{Ejercicio 1: Protocolo HTTP}
+
+Trabajar sobre la carpeta ej1
 
 \subsection{Ejercicio 1.1}
 
@@ -122,23 +125,14 @@ Finalmente, para validar que el ejercicio está completo, levantar el servidor c
 cat requests/01_get.http | nc localhost 8080
 \end{lstlisting}
 
+
 \subsection{Ejercicio 1.4}
-
-Para completar este ejercicio, primero crear el archivo \texttt{requests/02\_get\_json.http} que solicite el recurso \texttt{/users.json}. Luego, en el archivo \texttt{http\_server.py}, completar la función \texttt{get\_content\_type()} para determinar el Content-Type según la extensión del archivo. Modificar la función \texttt{handle\_get()} para servir archivos del filesystem desde la carpeta \texttt{resources/}, retornando código 200 si el archivo existe y 404 si no existe.
-
-Para validar que el ejercicio está completo, ejecutar el request creado con netcat:
-
-\begin{lstlisting}[language=bash]
-cat requests/02_get_json.http | nc localhost 8080
-\end{lstlisting}
-
-\subsection{Ejercicio 1.5}
 
 Completar la función \texttt{parse\_request()} en el archivo \texttt{http\_parser.py}. Esta función debe parsear un request HTTP completo incluyendo el body. La línea vacía separa los headers del body. La función debe retornar un diccionario con las keys \texttt{method}, \texttt{path}, \texttt{version}, y \texttt{body}.
 
 Para completar este ejercicio, crear un archivo \texttt{requests/02\_parse\_complete.http} con un request que incluya headers y body, y ejecutarlo con netcat para verificar que el parser funciona correctamente.
 
-\subsection{Ejercicio 1.6}
+\subsection{Ejercicio 1.5}
 
 Para completar este ejercicio, primero crear el archivo \texttt{requests/03\_post.http} con el siguiente contenido:
 
@@ -158,19 +152,8 @@ Finalmente, para validar que el ejercicio está completo, ejecutar el request cr
 cat requests/03_post.http | nc localhost 8080
 \end{lstlisting}
 
-\subsection{Ejercicio 1.7}
 
-Para completar este ejercicio, primero crear el archivo \texttt{requests/04\_head.http} igual a un GET request pero utilizando el método HEAD. Luego, en el archivo \texttt{http\_server.py}, completar la función \texttt{handle\_head()} para manejar requests HEAD, retornando solo headers sin body. Actualizar el ruteo para manejar el método HEAD.
-
-Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
-
-\begin{lstlisting}[language=bash]
-cat requests/04_head.http | nc localhost 8080
-\end{lstlisting}
-
-Se observarán los headers de la respuesta pero no el contenido del recurso.
-
-\subsection{Ejercicio 1.8}
+\subsection{Ejercicio 1.6}
 
 Para completar este ejercicio, primero crear el archivo \texttt{requests/05\_headers.http} con múltiples headers como Host, User-Agent, Accept y Connection. Luego, en el archivo \texttt{http\_parser.py}, completar la función \texttt{parse\_headers()} y modificar \texttt{parse\_request()} para incluir los headers en el diccionario retornado.
 
@@ -180,7 +163,7 @@ Finalmente, para validar que el ejercicio está completo, ejecutar el request cr
 cat requests/05_headers.http | nc localhost 8080
 \end{lstlisting}
 
-\subsection{Ejercicio 1.9}
+\subsection{Ejercicio 1.7}
 
 Para completar este ejercicio, primero crear el archivo \texttt{requests/06\_not\_found.http} solicitando un recurso inexistente como \texttt{/noexiste.html}. La implementación del Ejercicio 1.4 ya debe manejar correctamente el error 404.
 
@@ -192,13 +175,33 @@ cat requests/06_not_found.http | nc localhost 8080
 
 \section{Ejercicio 2: Protocolo WebSocket}
 
+Trabajar sobre la carpeta ej2
+
+El protocolo WebSocket permite comunicación bidireccional en tiempo real entre cliente y servidor. A diferencia de HTTP que es stateless y requiere un nuevo request para cada respuesta, WebSocket mantiene una conexión abierta que permite que ambas partes envíen datos cuando lo necesiten.
+
+El establecimiento de una conexión WebSocket comienza con un handshake que utiliza HTTP. El cliente envía un request HTTP normal pero con headers especiales que indican el deseo de hacer upgrade a WebSocket. El servidor debe verificar estos headers y responder con un código de estado 101 (Switching Protocols) para confirmar que acepta el upgrade.
+
 \subsection{Ejercicio 2.1}
 
-Para completar este ejercicio, primero crear el archivo \texttt{requests/handshake.http} con un HTTP request de upgrade WebSocket. El protocolo WebSocket comienza como un HTTP request normal con headers especiales: \texttt{Upgrade: websocket}, \texttt{Connection: Upgrade}, \texttt{Sec-WebSocket-Key} (valor aleatorio en Base64), y \texttt{Sec-WebSocket-Version: 13}. El servidor debe responder calculando el valor \texttt{Sec-WebSocket-Accept} según el algoritmo del RFC 6455.
+Para completar este ejercicio, primero crear el archivo \texttt{requests/handshake.http} con un HTTP request de upgrade WebSocket. El request es un GET normal con headers especiales: \texttt{Upgrade: websocket}, \texttt{Connection: Upgrade}, \texttt{Sec-WebSocket-Key} (valor aleatorio de 16 bytes en Base64), y \texttt{Sec-WebSocket-Version: 13}. El request debe tener la siguiente estructura:
 
-En el archivo \texttt{websocket\_frame.py}, completar la función \texttt{calculate\_accept\_key()} según el algoritmo del RFC 6455: concatenar el \texttt{Sec-WebSocket-Key} con el string mágico \texttt{"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"}, calcular SHA-1, y encodear en Base64.
+\begin{lstlisting}
+GET / HTTP/1.1
+Host: localhost:8080
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+Sec-WebSocket-Version: 13
 
-En el archivo \texttt{websocket\_server.py}, completar la función \texttt{handle\_handshake()} para procesar el request de upgrade y responder con código 101. El response debe tener el siguiente formato:
+\end{lstlisting}
+
+Para este ejercicio se puede usar el valor de ejemplo \texttt{dGhlIHNhbXBsZSBub25jZQ==} o generar uno nuevo.
+
+El servidor debe calcular \texttt{Sec-WebSocket-Accept} para probar que entiende el protocolo: tomar el \texttt{Sec-WebSocket-Key} del cliente, concatenarlo con el string mágico \texttt{"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"}, calcular SHA-1, y codificar en Base64.
+
+En el archivo \texttt{websocket\_frame.py}, las funciones \texttt{sha1\_hash()} y \texttt{base64\_encode()} ya están implementadas. Completar la función \texttt{calculate\_accept\_key()} que recibe el \texttt{Sec-WebSocket-Key} como string, lo concatena con el string mágico, calcula SHA-1 usando \texttt{sha1\_hash()}, y codifica en Base64 usando \texttt{base64\_encode()}.
+
+En el archivo \texttt{websocket\_server.py}, completar la función \texttt{handle\_handshake()} para procesar el request de upgrade. La función debe recibir datos del socket, parsear con \texttt{parse\_request()} del Ejercicio 1, verificar que el header \texttt{upgrade} sea \texttt{"websocket"} y que exista \texttt{sec-websocket-key}, calcular el accept key, y construir y enviar un response HTTP con código 101. Para construir la respuesta, usar \texttt{build\_response()} del Ejercicio 1 como referencia, pero construir manualmente para incluir los headers adicionales. El formato del response es:
 
 \begin{lstlisting}
 HTTP/1.1 101 Switching Protocols\r\n
@@ -208,25 +211,39 @@ Sec-WebSocket-Accept: [accept key calculado]\r\n
 \r\n
 \end{lstlisting}
 
-Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
+El código 101 indica que el servidor acepta el upgrade. Cualquier otro código indica que el handshake falló.
+
+Finalmente, para validar que el ejercicio está completo, levantar el servidor con \texttt{python websocket\_server.py} y en otra terminal ejecutar:
 
 \begin{lstlisting}[language=bash]
 cat requests/handshake.http | nc localhost 8080
 \end{lstlisting}
 
+El servidor debe responder con código 101 y el header \texttt{Sec-WebSocket-Accept} con el valor calculado correctamente.
+
 \subsection{Ejercicio 2.2}
 
-A diferencia de HTTP que utiliza texto plano, WebSocket empaqueta mensajes en frames binarios. La estructura de un frame es: Byte 0 contiene FIN (bit 7) y Opcode (bits 0-3), Byte 1 contiene MASK (bit 7) y Length (bits 0-6), los bytes 2-5 contienen la Masking key si MASK=1, y el resto contiene el Payload. Los opcodes importantes son \texttt{0x1} para mensaje de texto, \texttt{0x8} para cerrar conexión, \texttt{0x9} para ping, y \texttt{0xA} para pong.
+Una vez completado el handshake, la conexión cambia de HTTP a WebSocket y comienza la comunicación mediante frames binarios. A diferencia de HTTP que utiliza texto plano, WebSocket empaqueta todos los mensajes en frames binarios con una estructura específica.
 
-En el archivo \texttt{websocket\_frame.py}, completar las funciones \texttt{unmask\_payload()}, \texttt{parse\_frame()} y \texttt{build\_frame()} para manejar frames WebSocket. Recordar que el cliente enmascara los frames pero el servidor no.
+La estructura de un frame WebSocket para payloads menores a 126 bytes se muestra en la siguiente figura:
 
-Para completar este ejercicio, probar la implementación usando el cliente WebSocket proporcionado en \texttt{client.html} o creando requests manuales con frames binarios.
+\begin{center}
+\includegraphics[width=0.9\textwidth]{imagenes/images.png}
+\end{center}
 
-\subsection{Ejercicio 2.3}
+El primer byte contiene el bit FIN (bit 7) que indica si es el último fragmento, y el opcode (bits 0-3) que define el tipo de frame. Los opcodes importantes son \texttt{0x1} para mensaje de texto y \texttt{0x8} para cerrar conexión. El segundo byte contiene el bit MASK (bit 7) que indica si el payload está enmascarado, y la longitud del payload (bits 0-6). Si MASK es 1, los siguientes 4 bytes son la masking key, y después viene el payload enmascarado. Si MASK es 0, el payload comienza inmediatamente después del segundo byte.
 
-Para completar este ejercicio, primero asegurarse de que el handshake funciona correctamente ejecutando el request creado en el Ejercicio 2.1. Luego, en el archivo \texttt{websocket\_server.py}, completar las funciones \texttt{handle\_messages()} y \texttt{handle\_client()} para implementar un echo server que reciba mensajes y los devuelva al cliente.
+El RFC 6455 requiere que todos los frames del cliente al servidor estén enmascarados usando XOR. La función \texttt{unmask\_payload()} en \texttt{websocket\_frame.py} ya está implementada: para cada byte \texttt{i}, calcula \texttt{j = i \% 4} y hace \texttt{payload[i] XOR masking\_key[j]}.
 
-Finalmente, para validar que el ejercicio está completo, iniciar el servidor con \texttt{python websocket\_server.py}, abrir \texttt{client.html} en el navegador, escribir y enviar mensajes, y verificar que el servidor hace eco de los mensajes. El archivo \texttt{client.html} proporciona un cliente WebSocket JavaScript completo.
+\subsubsection{Ejercicio 2.2.1}
+
+En el archivo \texttt{websocket\_frame.py}, completar la función \texttt{build\_frame()} que construye un frame para enviar desde el servidor. El servidor nunca enmascara frames (MASK bit = 0). La función \texttt{parse\_frame()} ya está implementada y puede usarse como referencia para entender la estructura de los frames. Construir el primer byte con FIN=1 y el opcode, el segundo byte con MASK=0 y la longitud del payload, y luego agregar el payload codificado en UTF-8. Solo manejar payloads menores a 126 bytes.
+
+\subsubsection{Ejercicio 2.2.2}
+
+En el archivo \texttt{websocket\_server.py}, completar la función \texttt{handle\_messages()} que maneja la comunicación después del handshake exitoso. Ejecutar un loop que reciba datos del socket, parsear el frame con \texttt{parse\_frame()}, y si el opcode es \texttt{0x1} (text), imprimir el mensaje recibido, construir un frame de respuesta con \texttt{build\_frame()}, y enviarlo de vuelta al cliente. Si el opcode es \texttt{0x8} (close) o no hay datos, terminar el loop. Actualizar \texttt{handle\_client()} para que después de un handshake exitoso llame a \texttt{handle\_messages()}.
+
+Finalmente, para validar que el ejercicio está completo, levantar el servidor con \texttt{python websocket\_server.py}, abrir \texttt{client.html} en el navegador, hacer clic en "Conectar", y enviar mensajes. El servidor debe hacer eco de cada mensaje recibido, demostrando la comunicación bidireccional en tiempo real.
 
 
 \end{document}
