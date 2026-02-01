@@ -6,12 +6,10 @@ MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 
 def sha1_hash(data: str) -> bytes:
-    """Calcula el hash SHA-1 de un string y retorna los bytes del hash."""
     return hashlib.sha1(data.encode()).digest()
 
 
 def base64_encode(data: bytes) -> str:
-    """Codifica bytes en Base64 y retorna el string."""
     return base64.b64encode(data).decode()
 
 
@@ -30,13 +28,7 @@ def unmask_payload(masked_payload: bytes, masking_key: bytes) -> bytes:
 
 
 def parse_frame(data: bytes) -> dict:
-    """
-    Parsea un frame WebSocket recibido del cliente.
-    
-    Retorna un diccionario con:
-    - "opcode": int, el opcode del frame
-    - "payload": str o bytes, el payload desenmascarado (string si opcode=0x1, bytes en otro caso)
-    """
+
     if len(data) < 2:
         raise ValueError("Frame demasiado corto")
     

@@ -70,7 +70,11 @@ Este taller tiene como objetivo comprender cómo funcionan los protocolos de niv
 
 \section*{Metodología de Trabajo}
 
-Para completar cada ejercicio o subconsigna, el alumno debe:  crear un archivo con el request HTTP/WebSocket dentro de la carpeta \texttt{requests/}, luego implementar el código correspondiente en los archivos indicados, y finalmente ejecutar el request con netcat para validar que la implementación funciona correctamente. Tener en cuenta que se debe modificar la funcion principal  \texttt{handle\_client()} del server y correrlo de vuelta en otra terminal previamente a testearlo con netcat.
+Para completar cada ejercicio o subconsigna, el alumno debe crear un archivo con el request HTTP/WebSocket dentro de la carpeta \texttt{requests/}, luego implementar el código correspondiente en los archivos indicados, y finalmente ejecutar el request con netcat para validar que la implementación funciona correctamente.
+
+En cada ejercicio que requiera modificar el servidor, se debe actualizar principalmente la función \texttt{handle\_client()} en \texttt{http\_server.py} o \texttt{websocket\_server.py}, según corresponda. Después de realizar cambios en el código del servidor, es necesario detener el servidor (si está corriendo) y levantarlo nuevamente para que los cambios surtan efecto.
+
+Para visualizar los resultados de la implementación, se puede usar la función \texttt{print()} en el código del servidor para ver información en la terminal donde corre el servidor, o incluir información en el response HTTP para observarla desde el cliente con netcat.
 
 \section*{Herramientas}
 
@@ -86,6 +90,8 @@ Este comando lee el archivo y lo envía byte por byte al servidor en localhost p
 
 Trabajar sobre la carpeta ej1
 
+En este ejercicio se trabajará principalmente con dos archivos: \texttt{http\_parser.py} para las funciones de parsing y construcción de responses, y \texttt{http\_server.py} para la lógica del servidor. La función principal que se modificará en el servidor es \texttt{handle\_client()}, que recibe las conexiones de los clientes. Después de cada modificación en el código, se debe reiniciar el servidor ejecutando nuevamente \texttt{python http\_server.py} en una terminal, y en otra terminal ejecutar los requests con netcat para validar los cambios.
+
 \subsection{Ejercicio 1.1}
 
 Completar la función \texttt{parse\_request\_line()} en el archivo \texttt{http\_parser.py}. Esta función debe separar la primera línea de un HTTP request en sus tres componentes: método, path y versión del protocolo. La función recibe como entrada un string como \texttt{"GET /index.html HTTP/1.1"} y debe retornar un diccionario con las keys \texttt{"method"}, \texttt{"path"} y \texttt{"version"}.
@@ -94,17 +100,16 @@ Para completar este ejercicio, crear un archivo \texttt{requests/01\_parse\_test
 
 \subsection{Ejercicio 1.2}
 
-Completar la función \texttt{build\_response()} en el archivo \texttt{http\_parser.py}. Esta función formatea respuestas HTTP correctamente según el estándar. Recibe como parámetros el código de estado (200, 404, etc.), el contenido de la respuesta en bytes, y el tipo MIME del contenido. Debe construir un response HTTP con el siguiente formato:
+Completar la función \texttt{build\_response()} en el archivo \texttt{http\_parser.py}. Esta función formatea respuestas HTTP correctamente según el estándar. Recibe como parámetros el código de estado (200, 404, etc.), el contenido de la respuesta en bytes, y opcionalmente un diccionario con headers (donde cada key es el nombre del header y cada value es su valor). Debe construir un response HTTP con el siguiente formato:
 
 \begin{lstlisting}
 HTTP/1.1 CODIGO MENSAJE\r\n
-Content-Type: tipo\r\n
-Content-Length: tamanio\r\n
+[headers, uno por línea]
 \r\n
 body
 \end{lstlisting}
 
-Utilizar el diccionario \texttt{STATUS\_MESSAGES} para obtener el mensaje correspondiente al código de estado.
+Utilizar el diccionario \texttt{STATUS\_MESSAGES} para obtener el mensaje correspondiente al código de estado. Si se proporciona el header \texttt{Content-Type} en el diccionario de headers, incluirlo en la respuesta.
 
 
 \subsection{Ejercicio 1.3}
@@ -112,12 +117,11 @@ Utilizar el diccionario \texttt{STATUS\_MESSAGES} para obtener el mensaje corres
 Para completar este ejercicio, primero crear el archivo \texttt{requests/01\_get.http} que solicite el recurso \texttt{/index.html}. Un GET request tiene la siguiente estructura:
 
 \begin{lstlisting}
-METODO PATH VERSION
-Host: valor
+METODO RECURSO VERSION
 [linea vacia]
 \end{lstlisting}
 
-Luego, en el archivo \texttt{http\_server.py}, completar las funciones \texttt{handle\_client()} y \texttt{handle\_get()} para manejar requests GET. Es necesario implementar ruteo según el método del request.
+Luego, en el archivo \texttt{http\_server.py}, completar las funciones \texttt{handle\_client()} y \texttt{handle\_get()} para manejar requests GET. En \texttt{handle\_client()} usar \texttt{parse\_request\_line()} y pasar el diccionario resultante a \texttt{handle\_get()}. La función \texttt{handle\_get()} debe leer el archivo desde \texttt{resources/} y retornarlo con \texttt{build\_response()}.
 
 Finalmente, para validar que el ejercicio está completo, levantar el servidor con \texttt{python http\_server.py} y en otra terminal ejecutar el request creado:
 
@@ -128,44 +132,57 @@ cat requests/01_get.http | nc localhost 8080
 
 \subsection{Ejercicio 1.4}
 
-Completar la función \texttt{parse\_request()} en el archivo \texttt{http\_parser.py}. Esta función debe parsear un request HTTP completo incluyendo el body. La línea vacía separa los headers del body. La función debe retornar un diccionario con las keys \texttt{method}, \texttt{path}, \texttt{version}, y \texttt{body}.
+Completar la función \texttt{parse\_headers()} en el archivo \texttt{http\_parser.py}. Esta función debe parsear las líneas de headers de un HTTP request. Los headers tienen el formato \texttt{"Key: Value"} y deben retornarse en un diccionario donde las keys están en minúsculas. La función recibe una lista de strings con las líneas de headers y retorna un diccionario.
 
-Para completar este ejercicio, crear un archivo \texttt{requests/02\_parse\_complete.http} con un request que incluya headers y body, y ejecutarlo con netcat para verificar que el parser funciona correctamente.
+Para completar este ejercicio, crear un archivo \texttt{requests/02\_headers.http} con un request que incluya múltiples headers como Host, User-Agent, Accept y Connection, y ejecutarlo con netcat para verificar que el parser funciona correctamente.
 
 \subsection{Ejercicio 1.5}
 
-Para completar este ejercicio, primero crear el archivo \texttt{requests/03\_post.http} con el siguiente contenido:
+Para completar este ejercicio, primero crear el archivo \texttt{requests/03\_get\_json.http} que solicite el recurso \texttt{/users.json} con headers, incluyendo el header \texttt{Accept: application/json}. Un GET request con headers tiene la siguiente estructura:
+
+\begin{lstlisting}
+GET /users.json HTTP/1.1
+Host: localhost:8080
+Accept: application/json
+\end{lstlisting}
+
+
+
+Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
+
+\begin{lstlisting}[language=bash]
+cat requests/03_get_json.http | nc localhost 8080
+\end{lstlisting}
+
+\subsection{Ejercicio 1.6}
+
+Completar la función \texttt{parse\_request()} en el archivo \texttt{http\_parser.py} para que también parse el body del request. La línea vacía separa los headers del body. Si existe el header \texttt{Content-Length}, leer exactamente esa cantidad de bytes como body. La función debe retornar un diccionario con las keys \texttt{method}, \texttt{path}, \texttt{version}, \texttt{headers} y \texttt{body}.
+
+Para completar este ejercicio, crear un archivo \texttt{requests/04\_parse\_body.http} con un request que incluya headers y body, y ejecutarlo con netcat para verificar que el parser funciona correctamente.
+\subsection{Ejercicio 1.7}
+
+Para completar este ejercicio, primero crear el archivo \texttt{requests/05\_post.http} con el siguiente contenido:
 
 \begin{lstlisting}
 POST /users HTTP/1.1
 Host: localhost:8080
-Content-Length: [calcular bytes exactos]
+Content-Type: application/json
+Content-Length: 20
 
 {"name": "Charlie"}
 \end{lstlisting}
 
-El header \texttt{Content-Length} debe contener el número exacto de bytes del body. Luego, en el archivo \texttt{http\_server.py}, completar la función \texttt{handle\_post()} para procesar requests POST y retornar código 201. Actualizar el ruteo para manejar el método POST.
+El header \texttt{Content-Length} indica el número de bytes del body. En este ejemplo, el body \texttt{"\{name": "Charlie"\}"} tiene 20 bytes. Luego, en el archivo \texttt{http\_server.py}, completar la función \texttt{handle\_post()} para procesar requests POST y retornar código 201. Actualizar el ruteo en \texttt{handle\_client()} para manejar el método POST. La función \texttt{handle\_post()} recibirá un diccionario con las keys \texttt{method}, \texttt{path}, \texttt{version}, \texttt{headers} y \texttt{body}.
 
 Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
 
 \begin{lstlisting}[language=bash]
-cat requests/03_post.http | nc localhost 8080
+cat requests/05_post.http | nc localhost 8080
 \end{lstlisting}
 
+\subsection{Ejercicio 1.8}
 
-\subsection{Ejercicio 1.6}
-
-Para completar este ejercicio, primero crear el archivo \texttt{requests/05\_headers.http} con múltiples headers como Host, User-Agent, Accept y Connection. Luego, en el archivo \texttt{http\_parser.py}, completar la función \texttt{parse\_headers()} y modificar \texttt{parse\_request()} para incluir los headers en el diccionario retornado.
-
-Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
-
-\begin{lstlisting}[language=bash]
-cat requests/05_headers.http | nc localhost 8080
-\end{lstlisting}
-
-\subsection{Ejercicio 1.7}
-
-Para completar este ejercicio, primero crear el archivo \texttt{requests/06\_not\_found.http} solicitando un recurso inexistente como \texttt{/noexiste.html}. La implementación del Ejercicio 1.4 ya debe manejar correctamente el error 404.
+Para completar este ejercicio, primero crear el archivo \texttt{requests/06\_not\_found.http} solicitando un recurso inexistente como \texttt{/noexiste.html}. La implementación anterior ya debe manejar correctamente el error 404.
 
 Finalmente, para validar que el ejercicio está completo, ejecutar el request creado con netcat:
 
@@ -201,7 +218,7 @@ El servidor debe calcular \texttt{Sec-WebSocket-Accept} para probar que entiende
 
 En el archivo \texttt{websocket\_frame.py}, las funciones \texttt{sha1\_hash()} y \texttt{base64\_encode()} ya están implementadas. Completar la función \texttt{calculate\_accept\_key()} que recibe el \texttt{Sec-WebSocket-Key} como string, lo concatena con el string mágico, calcula SHA-1 usando \texttt{sha1\_hash()}, y codifica en Base64 usando \texttt{base64\_encode()}.
 
-En el archivo \texttt{websocket\_server.py}, completar la función \texttt{handle\_handshake()} para procesar el request de upgrade. La función debe recibir datos del socket, parsear con \texttt{parse\_request()} del Ejercicio 1, verificar que el header \texttt{upgrade} sea \texttt{"websocket"} y que exista \texttt{sec-websocket-key}, calcular el accept key, y construir y enviar un response HTTP con código 101. Para construir la respuesta, usar \texttt{build\_response()} del Ejercicio 1 como referencia, pero construir manualmente para incluir los headers adicionales. El formato del response es:
+En el archivo \texttt{websocket\_server.py}, completar la función \texttt{handle\_handshake()} para procesar el request de upgrade. La función debe recibir datos del socket, parsear con \texttt{parse\_request()} del Ejercicio 1, verificar que el header \texttt{upgrade} sea \texttt{"websocket"} y que exista \texttt{sec-websocket-key}, calcular el accept key, y construir y enviar un response HTTP con código 101. Para construir la respuesta, usar \texttt{build\_response()} del Ejercicio 1 pasando un diccionario con los headers necesarios para WebSocket (\texttt{Upgrade}, \texttt{Connection} y \texttt{Sec-WebSocket-Accept}) en el parámetro \texttt{headers}. El formato del response es:
 
 \begin{lstlisting}
 HTTP/1.1 101 Switching Protocols\r\n

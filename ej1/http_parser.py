@@ -1,17 +1,18 @@
+from typing import List
+
 def parse_request_line(line: str) -> dict:
     # Completar
     pass
 
 
-def parse_headers(header_lines: list[str]) -> dict:
+def parse_headers(header_lines: List[str]) -> dict:
     # Completar
     pass
 
 
-def parse_request(raw_data: bytes) -> dict:
+def parse_request(lines: List[str]) -> dict:
     # Completar
     pass
-
 
 STATUS_MESSAGES = {
     200: "OK",
@@ -20,7 +21,13 @@ STATUS_MESSAGES = {
     500: "Internal Server Error",
 }
 
-
-def build_response(status_code: int, body: bytes, content_type: str = "text/plain") -> bytes:
+def build_response(
+    status_code: int,
+    body: bytes,
+    headers: dict = None
+) -> bytes:
+    VERSION = "HTTP/1.1"
     # Completar
-    pass
+
+
+

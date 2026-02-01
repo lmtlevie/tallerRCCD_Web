@@ -1,13 +1,12 @@
 import socket
 import threading
-from http_parser import parse_request_line, parse_request, build_response
+from http_parser import parse_request_line, parse_request, parse_headers, build_response
 
-
-def handle_get(request: dict) -> bytes:
+def handle_get(request) -> bytes:
     pass
 
 
-def handle_post(request: dict) -> bytes:
+def handle_post(request) -> bytes:
     pass
 
 
@@ -33,10 +32,15 @@ class HTTPServer:
     def handle_client(self, client_socket, address):
         try:
             data = client_socket.recv(4096)
-            request_text = data.decode('utf-8')
+            request= data.decode('utf-8')
+            request = request.split("\n")
+
+            response = None
             
             # Completar
             
+            
+            client_socket.sendall(response)
         except Exception as e:
             print(f"Error: {e}")
         finally:

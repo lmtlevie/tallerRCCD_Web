@@ -2,16 +2,15 @@ import socket
 import threading
 import sys
 sys.path.append('../ej1')
-from http_parser import parse_request
+from ..ej1.http_parser import parse_request,build_response
 from websocket_frame import calculate_accept_key, parse_frame, build_frame
 
 
-def handle_handshake(client_socket):
+def handle_handshake(request_lines):
     # Completar
     pass
 
-
-def handle_messages(client_socket):
+def handle_messages(request_lines):
     # Completar
     pass
 
@@ -36,9 +35,15 @@ class WebSocketServer:
             thread.start()
     
     def handle_client(self, client_socket, address):
+        # Recibir datos del socket
+        data = client_socket.recv(4096)
+        
+        # Decodificar y convertir a lista de líneas
+        request_text = data.decode('utf-8')
+        request_lines = request_text.split("\n")
         try:
-            if handle_handshake(client_socket):
-                handle_messages(client_socket)
+            if handle_handshake(request_lines):
+                handle_messages(request_lines)
         except Exception as e:
             print(f"Error: {e}")
         finally:
